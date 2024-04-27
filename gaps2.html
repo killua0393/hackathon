@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IERA</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+          "imports": {
+            "@google/generative-ai": "https://esm.run/@google/generative-ai"
+          }
+        }
+     </script>
+     <script type="module">
+        
+        import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+
+        // Fetch your API_KEY
+        const API_KEY = "AIzaSyArK-2WohJUGDsbY5od3jZ5X17aD5qrhpk";
+  
+        // Access your API key (see "Set up your API key" above)
+        const genAI = new GoogleGenerativeAI(API_KEY);
+  
+        // For text-only input, use the gemini-pro model
+        const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+        const generationConfig = {
+            temperature: 0.9,
+            topK: 1,
+            topP: 1,
+            maxOutputTokens: 2048,
+          };
+        
+          const safetySettings = [
+            {
+              category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+              threshold: HarmBlockThreshold.BLOCK_NONE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+              threshold: HarmBlockThreshold.BLOCK_NONE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+              threshold: HarmBlockThreshold.BLOCK_NONE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+              threshold: HarmBlockThreshold.BLOCK_NONE,
+            },
+          ];
+        
+  
+        // Function to handle sending the input and displaying the response
+        // Function to handle sending the input and displaying the response
+        async function sendEmailNotification(prompt, responseText) {
+            // Define the recipient email address (e.g., hospital or fire department)
+            const recipientEmail = "example@example.com";
+        
+            // Construct the email message
+            const subject = "Emergency Notification";
+            const body = `Emergency Alert:\n\nPrompt: ${prompt}\n\nResponse: ${responseText}`;
+        
+            // Make a fetch request to your email API endpoint
+            const response = await fetch("fad537d1f1d85ec77967f85daa059330", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    to: "agulu393@gmail.com",
+                    subject: "subject",
+                    body: "body",
+                }),
+            });
+        
+            // Check if the email was sent successfully
+            if (response.ok) {
+                console.log("Email notification sent successfully.");
+            } else {
+                console.error("Failed to send email notification.");
+            }
+        }
+        
+        
+async function handleInput() {
+  // Get the input value
+  const inputElement = document.querySelector('.input input');
+  const userInput = inputElement.value.trim();
+ 
+  // Define the provided prompt
+  const providedPrompt = `
+  "Emergency Type: FIre/Health/Police
+  
+  /*Provide a paragraph, ie. a structured data table of whatever data we can induce from the prompt, so for this prompt make it like : 
+  Adress: 
+  Victim: 
+  Victim Age: 
+  Fire Type:
+  etc etc..
+  whatever details are relevant to the prompt*/ add a lot of details like 
+  Possible condition: 
+  Symptoms: 
+  DO NOT MISS OUT ON DETAILS, DO NOT FABRICATE DETAILS 
+  
+  /*Provide a next paragraph to be the reply to the user, make it comforting, like you are a 911 operator, provide necessary instructions to the user to do what in that situation, and tell the user that "an Ambulance/Fire Brigade has been dispatched" and will reach you soon. KEEP THE USER REPLY IN ONE PARAGRAPH, NO POINTS (1,2,3)"
+  
+  KEEP THE USER REPLY IN ONE PARAGRAPH,No Asterisk(*), in the answer"
+  
+  `;
+
+  // Concatenate the user's input with the provided prompt
+  const prompt = `${providedPrompt}\n\nPROMPT:\n${userInput}`;
+  
+  const parts = [
+  {text: "you will be given a PROMPT, AND YOU ARE SUPPOSED TO REPLY TO ME IN THE FOLLWOING STRUCTURE \n\"Emergency Type: FIre/Health\n\n/Provide a paragraph, ie. a structured data table of whatever data we can induce from the prompt, so for this prompt make it like :\nAdress:\nVictim:\nVictim Age:\nFire Type:\netc etc.. whatever details are relevant to the prompt/\nadd a lot of details like Possible condition:\nSymptoms:\nDO NOT MISS OUT ON DETAILS, DO NOT FABRICATE DETAILS\n\n\n/*Provide a next paragraph to be the reply to the user, make it comforting, like you are a 911 operator, provide necesary instructions to the user to do what in that siutuation, and tell the user that \"an Ambulance/Fire Brigade has been dispatched\" and will reach you soon. KEEP THE USER REPLY IN ONE PARAGRAPH, NO POINTS (1,2,3)\""},
+  {text: "input: I'm at 567 Pinecrest Drive, Apartment 3B. My wife, Sarah, who is 54 years old, is having trouble breathing. She's been experiencing tightness in her chest for the past half-hour, and now her lips have turned a bluish color. She's sitting on the couch, clutching her chest, and says the pain feels like a heavy weight pressing down. I've tried giving her water, but it hasn't helped. I'm worried it might be a heart attack because her father had one last year. Please send help quickly."},
+  {text: "output: Emergency Type: Health\n\nAddress: 567 Pinecrest Drive, Apartment 3B\nVictim: Sarah\nVictim Age: 54\nSymptoms: Difficulty breathing, tightness in chest, lips turning bluish, sensation of heavy weight pressing down on chest\nPossible Cause: Suspected heart attack, given family history and symptoms\n\n\nIt sounds like Sarah may be experiencing a cardiac emergency, possibly a heart attack, given her symptoms and family history. It's crucial to act quickly. First, reassure Sarah and help her sit in a comfortable position, preferably with her back supported. Loosen any tight clothing to ease breathing. If she's not allergic to aspirin and hasn't taken any today, you can give her one (325 mg) to chew slowly, as it can help thin her blood and reduce the risk of clotting during a heart attack. Stay by her side and monitor her closely. An ambulance has been dispatched and will reach you soon. Stay on the line with me, and let me know if there are any changes in Sarah's condition. Help is on the way."},
+  {text: "input: My address is 123 Oak Street. It's a quiet neighborhood, but there's been a horrific car accident just outside my house. I can see flames engulfing both a sedan and a pickup truck, and the heat is intense. The fire has spread to nearby trees, and the branches are crackling with flames. I'm afraid it might spread further, and there's a chance someone could be trapped inside one of the vehicles. Please, we need emergency services here urgently."},
+  {text: "output: Emergency Type: Fire\n\nAddress: 123 Oak Street\nFire Type: Vehicle fire\nVehicles Involved: Sedan and pickup truck\nAdditional Information: Flames engulfing both vehicles, fire spreading to nearby trees, intense heat, crackling flames from tree branches\nPotential Victims: Occupants of the vehicles, possibility of individuals trapped inside\nRequested Assistance: Urgent deployment of emergency services for firefighting and rescue operations\n\nIt sounds like a serious emergency situation. First and foremost, ensure your own safety and stay away from the flames and any potential hazards. If it's safe to do so, try to assess if anyone is trapped inside the vehicles and if there are any bystanders who might need assistance. Call emergency services immediately and provide them with as much detail as possible about the situation, including the location, type of vehicles involved, and any potential injuries or trapped individuals. If there are any fire extinguishers nearby and it's safe to use them, attempt to control the flames to prevent further spread. Stay on the line with emergency services and follow any instructions they provide. Help is on the way."},
+  {text: "input: This is 321 Oakwood Lane, Unit 5. My neighbor, Mr. Johnson, collapsed while mowing his lawn about ten minutes ago. He's lying unconscious on the grass, and I've checked for a pulse, but I can't feel one. His skin feels cold and clammy, and his breathing is shallow. There's a strong smell of freshly cut grass. I've already called his wife, but she's on her way from work, and I don't know what else to do. Please send an ambulance right away"},
+  {text: "output: Emergency Type: Health \n\nAddress: 321 Oakwood Lane, Unit 5\nVictim: Mr. Johnson\nVictim Age: Unknown\nSymptoms: Unconscious, no pulse, cold and clammy skin, shallow breathing\nPossible Cause: Cardiac arrest, heat stroke, or other medical emergency \n\nThis situation sounds very serious. It's important to act quickly and start CPR if you're trained to do so.  This can help circulate blood and oxygen to his brain and vital organs until the paramedics arrive. If you're not trained in CPR, the 911 dispatcher can guide you through the steps.  An ambulance has been dispatched and is on its way. Stay on the line with me, and I'll provide further instructions and support until help arrives. Every second counts, so let's work together to give Mr. Johnson the best possible chance."},
+  {text: "input: \"It's an emergency! I'm calling from DAV Public School Patna, and chaos has erupted. A school shooting is unfolding before our eyes, and the shooter, known to us as Boogybooga, is wreaking havoc. He's a tall, intimidating figure, dressed in all black with a bandana covering his face. He's armed with what appears to be a semi-automatic rifle, and he's targeting students indiscriminately. I'm huddled with fellow classmates in a classroom, barricading the door in fear for our lives. Please, we need immediate police intervention to stop the shooter and rescue us from this nightmare!"},
+  {text: "output: Emergency Type: Police\n\nAddress: DAV Public School Patna\nIncident: School shooting\nSuspect: Boogybooga, tall, intimidating figure, dressed in all black with a bandana covering his face, armed with a semi-automatic rifle\nVictims: Multiple students targeted indiscriminately\nRequested Assistance: Immediate police intervention to apprehend the shooter and rescue students\n\nThis is a horrifying situation, and I understand the fear and panic you must be experiencing. Your safety is our top priority. First and foremost, stay calm and follow the instructions of your teachers and law enforcement officers. If you're in a safe location, stay there and barricade the door to prevent the shooter from entering. Silence your phone and turn off any lights to avoid attracting attention. If you're able to, contact your parents or guardians to inform them of your situation. The police have been notified and are on their way to the school. They are highly trained and equipped to handle this situation and will do everything in their power to protect you and apprehend the shooter. Stay on the line with me, and I'll provide updates and support until help arrives. Remember, you are not alone. We are here to help you through this crisis."},
+  {text: "input: waa waa"},
+  {text: "output: This data is irrelevant, please write something again."},
+  {text: "input: im gulu I feel depressed"},
+  {text: "output: NOT AN EMERGENCY, Seek Help if needed"},
+  {text: `input: ${prompt}`},
+  {text: "output: "},
+];
+
+  // Generate response based on the concatenated prompt and user input
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts }],
+    generationConfig,
+    safetySettings,
+  });
+  const responseText = result.response.text();
+  if (confirm("Do you want to send an email notification to the appropriate authorities?")) {
+    await sendEmailNotification(prompt, responseText);
+}
+  // Display the response in the search result section
+  const searchResultElement = document.querySelector('.search-result .answer');
+  searchResultElement.textContent = responseText;
+
+  
+  // Clear the input field
+  //inputElement.value = "";
+}
+
+// Function to clear the input field and search result
+function clearInput() {
+  const inputElement = document.querySelector('.input input');
+  const searchResultElement = document.querySelector('.search-result .answer');
+  inputElement.value = ""; // Clear the input field
+  searchResultElement.textContent = ""; // Clear the search result
+}
+
+// Attach event listener to the "send" button
+document.addEventListener("DOMContentLoaded", function() {
+  const sendButton = document.querySelector('.input button:first-of-type');
+  sendButton.addEventListener("click", handleInput);
+
+  // Attach event listener to the "clear" button
+  const clearButton = document.querySelector('.input button:last-of-type');
+  clearButton.addEventListener("click", clearInput);
+});
+
+     </script>
+    <!--<script src="script.js"></script>-->
+</head>
+<body>
+  <div class="app">
+      <p>
+        what's the issue?
+      </p>
+      <div class="input">
+        <input
+        value=""
+        placeholder="describe your issue...?"
+        onchange=""
+        />
+        <button>send</button>
+        <button>clear</button>
+      </div>
+      <div class="search-result">
+        <div key="">
+          <pre class="answer"></pre>
+        </div>
+      </div>
+      
+  </div>
+  <!--<script src="index.js"></script>-->
+</body>
+</html>
